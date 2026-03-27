@@ -1,0 +1,233 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberGuard — Secure Access Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-green:  #00ff41;
+      --neon-cyan:   #00f5ff;
+      --dark-bg:     #010d09;
+      --glass-bg:    rgba(0,255,65,0.04);
+      --glass-border:rgba(0,255,65,0.20);
+      --text-primary:#e0ffe8;
+      --text-dim:    rgba(0,255,65,0.55);
+      --error:       #ff3c3c;
+    }
+
+    html, body {
+      width:100%; height:100%;
+      background: var(--dark-bg);
+      font-family: 'Share Tech Mono', monospace;
+      overflow: hidden;
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 70% at 50% 50%,
+        rgba(1,13,9,0.2) 0%,
+        rgba(1,13,9,0.8) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .portal-wrapper {
+      position: relative;
+      z-index: 2;
+      width: 100%; height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .portal-header .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--neon-green);
+      text-shadow: 0 0 15px var(--neon-green);
+      letter-spacing: 5px;
+    }
+
+    .login-card {
+      display: flex;
+      width: min(850px, 95vw);
+      background: rgba(1,18,10,0.8);
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    .card-left { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid var(--glass-border); }
+    .card-right { flex: 0 0 320px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+
+    input {
+      width: 100%;
+      background: rgba(0,255,65,0.05);
+      border: 1px solid var(--glass-border);
+      padding: 12px;
+      color: white;
+      border-radius: 5px;
+      outline: none;
+      font-family: 'Share Tech Mono';
+    }
+
+    .btn-login {
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      cursor: pointer;
+      font-family: 'Orbitron';
+      transition: 0.3s;
+    }
+    .btn-login:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+
+    /* ══ RADAR SCANNER ══ */
+    .radar-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 255, 65, 0.3);
+      background: radial-gradient(circle, rgba(0,255,65,0.05) 0%, transparent 70%);
+      overflow: hidden;
+    }
+
+    .radar-sweep {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      top: 50%;
+      left: 50%;
+      background: linear-gradient(45deg, rgba(0,255,65,0.4) 0%, transparent 70%);
+      transform-origin: top left;
+      animation: sweep 3s linear infinite;
+    }
+
+    @keyframes sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .radar-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle, transparent 30%, rgba(0,255,65,0.1) 31%, transparent 32%),
+        radial-gradient(circle, transparent 60%, rgba(0,255,65,0.1) 61%, transparent 62%);
+    }
+
+    .red-blip {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff0000;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #ff0000;
+      opacity: 0;
+      animation: blip 2s infinite;
+    }
+
+    @keyframes blip {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .status-text {
+      font-size: 0.7rem;
+      color: var(--neon-cyan);
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    @media(max-width: 600px) { .login-card { flex-direction: column; } .card-right { border-top: 1px solid var(--glass-border); } }
+  </style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+<div class="vignette"></div>
+
+<div class="portal-wrapper">
+  <header class="portal-header">
+    <div class="logo">CYBERGUARD</div>
+    <div class="status-text">// INTRUSION DETECTION SYSTEM ACTIVE</div>
+  </header>
+
+  <div class="login-card">
+    <div class="card-left">
+      <div style="color:var(--neon-cyan)">// AUTHENTICATION</div>
+      <input type="text" placeholder="OPERATOR ID">
+      <input type="password" placeholder="ACCESS KEY">
+      <button class="btn-login">AUTHENTICATE</button>
+    </div>
+
+    <div class="card-right">
+      <div class="status-text">RADAR SCANNER</div>
+      <div class="radar-container">
+        <div class="radar-grid"></div>
+        <div class="radar-sweep"></div>
+        <div class="red-blip" style="top:30%; left:40%; animation-delay: 0.5s;"></div>
+        <div class="red-blip" style="top:70%; left:20%; animation-delay: 1.2s;"></div>
+        <div class="red-blip" style="top:50%; left:80%; animation-delay: 2s;"></div>
+      </div>
+      <div class="status-text" id="radar-msg">[SYS] SCANNING FOR THREATS...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Matrix Rain Script
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const fontSize = 16;
+  const columns = canvas.width / fontSize;
+  const drops = Array(Math.floor(columns)).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(1, 13, 9, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#00ff41";
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = characters.charAt(Math.floor(Math.random() * characters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+
+  setInterval(drawMatrix, 50);
+
+  // Radar Message Logic
+  const msgs = ["[SYS] SCANNING...", "[LOG] NO THREATS FOUND", "[WARN] UNKNOWN PACKET DETECTED", "[SYS] ENCRYPTING..."];
+  setInterval(() => {
+    document.getElementById('radar-msg').innerText = msgs[Math.floor(Math.random() * msgs.length)];
+  }, 3000);
+</script>
+
+</body>
+</html>
