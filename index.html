@@ -1,233 +1,1994 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CyberGuard — Secure Access Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>CYBERGUARD</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Syne:wght@400;600;800&family=Creepster&family=Nosifer&display=swap" rel="stylesheet"/>
 
-    :root {
-      --neon-green:  #00ff41;
-      --neon-cyan:   #00f5ff;
-      --dark-bg:     #010d09;
-      --glass-bg:    rgba(0,255,65,0.04);
-      --glass-border:rgba(0,255,65,0.20);
-      --text-primary:#e0ffe8;
-      --text-dim:    rgba(0,255,65,0.55);
-      --error:       #ff3c3c;
-    }
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & CSS VARIABLES
+═══════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-    html, body {
-      width:100%; height:100%;
-      background: var(--dark-bg);
-      font-family: 'Share Tech Mono', monospace;
-      overflow: hidden;
-    }
+:root {
+  /* Core palette */
+  --black:      #000;
+  --bg:         #030006;
+  --bg2:        #07000d;
+  --surface:    rgba(10,0,18,0.92);
+  --surface2:   rgba(18,0,30,0.85);
+  --border:     rgba(180,0,255,0.18);
+  --border-red: rgba(200,0,0,0.35);
+  --border-hot: rgba(255,60,0,0.5);
 
-    #matrix-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%; height: 100%;
-      z-index: 0;
-    }
+  /* Neon palette */
+  --red:        #ff1a1a;
+  --red-dim:    #cc0000;
+  --red-glow:   rgba(255,26,26,0.4);
+  --red-lo:     rgba(255,26,26,0.08);
+  --crimson:    #8b0000;
+  --blood:      #3a0000;
+  --orange:     #ff4400;
+  --gold:       #ffaa00;
+  --purple:     #9d00ff;
+  --purple-dim: #6600cc;
+  --purple-lo:  rgba(157,0,255,0.1);
+  --cyan:       #00ffcc;
+  --cyan-lo:    rgba(0,255,204,0.08);
+  --green:      #00ff41;
+  --green-lo:   rgba(0,255,65,0.08);
 
-    .vignette {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 80% 70% at 50% 50%,
-        rgba(1,13,9,0.2) 0%,
-        rgba(1,13,9,0.8) 100%);
-      z-index: 1;
-      pointer-events: none;
-    }
+  /* Typography */
+  --font-horror: 'Nosifer', cursive;
+  --font-cyber:  'Orbitron', sans-serif;
+  --font-mono:   'Share Tech Mono', monospace;
+  --font-body:   'Syne', sans-serif;
 
-    .portal-wrapper {
-      position: relative;
-      z-index: 2;
-      width: 100%; height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-    }
+  /* Layout */
+  --topbar-h: 54px;
+  --sidebar-w: 240px;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
 
-    .portal-header .logo {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2rem;
-      font-weight: 900;
-      color: var(--neon-green);
-      text-shadow: 0 0 15px var(--neon-green);
-      letter-spacing: 5px;
-    }
+html { overflow-x: hidden; scroll-behavior: smooth; }
 
-    .login-card {
-      display: flex;
-      width: min(850px, 95vw);
-      background: rgba(1,18,10,0.8);
-      border: 1px solid var(--glass-border);
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      overflow: hidden;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
-    }
+body {
+  background: var(--bg);
+  color: rgba(255,200,200,0.85);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  cursor: default;
+}
 
-    .card-left { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid var(--glass-border); }
-    .card-right { flex: 0 0 320px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--blood); }
+::-webkit-scrollbar-thumb { background: var(--red-dim); border-radius: 2px; }
 
-    input {
-      width: 100%;
-      background: rgba(0,255,65,0.05);
-      border: 1px solid var(--glass-border);
-      padding: 12px;
-      color: white;
-      border-radius: 5px;
-      outline: none;
-      font-family: 'Share Tech Mono';
-    }
+/* ═══════════════════════════════════════════════
+   CANVAS BACKGROUNDS
+═══════════════════════════════════════════════ */
+#matrix-canvas {
+  position: fixed; inset: 0;
+  z-index: 0; opacity: 0.07;
+  pointer-events: none;
+}
 
-    .btn-login {
-      padding: 12px;
-      background: transparent;
-      border: 1px solid var(--neon-green);
-      color: var(--neon-green);
-      cursor: pointer;
-      font-family: 'Orbitron';
-      transition: 0.3s;
-    }
-    .btn-login:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+.scanlines {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom, transparent 0, transparent 2px,
+    rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+  );
+}
 
-    /* ══ RADAR SCANNER ══ */
-    .radar-container {
-      position: relative;
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: 2px solid rgba(0, 255, 65, 0.3);
-      background: radial-gradient(circle, rgba(0,255,65,0.05) 0%, transparent 70%);
-      overflow: hidden;
-    }
+.vignette {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.88) 100%);
+}
 
-    .radar-sweep {
-      position: absolute;
-      width: 50%;
-      height: 50%;
-      top: 50%;
-      left: 50%;
-      background: linear-gradient(45deg, rgba(0,255,65,0.4) 0%, transparent 70%);
-      transform-origin: top left;
-      animation: sweep 3s linear infinite;
-    }
+.bg-drips {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.drip {
+  position: absolute; top: 0; width: 2px;
+  background: linear-gradient(to bottom, #8b0000dd, #ff000044, transparent);
+  animation: drip-fall linear infinite;
+}
+@keyframes drip-fall {
+  0%   { height: 0;    top: -120px; opacity: 0.5; }
+  80%  { opacity: 0.25; }
+  100% { height: 55vh; top: 100vh;  opacity: 0; }
+}
 
-    @keyframes sweep {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+/* ═══════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════ */
+#app {
+  position: relative; z-index: 2;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
 
-    .radar-grid {
-      position: absolute;
-      inset: 0;
-      background-image: 
-        radial-gradient(circle, transparent 30%, rgba(0,255,65,0.1) 31%, transparent 32%),
-        radial-gradient(circle, transparent 60%, rgba(0,255,65,0.1) 61%, transparent 62%);
-    }
+/* ── TOP BAR ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: rgba(0,0,0,0.94);
+  border-bottom: 1px solid var(--border-red);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 16px;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+}
+#topbar::after {
+  content:''; position:absolute; bottom:-1px; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+  box-shadow: 0 0 12px var(--red-glow);
+}
 
-    .red-blip {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      background: #ff0000;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #ff0000;
-      opacity: 0;
-      animation: blip 2s infinite;
-    }
+.topbar-brand {
+  font-family: var(--font-horror);
+  font-size: clamp(14px, 3vw, 18px);
+  color: var(--red);
+  text-shadow: 0 0 15px var(--red-glow), 0 0 40px rgba(255,0,0,0.3);
+  letter-spacing: 2px;
+  animation: brand-flicker 5s infinite;
+  white-space: nowrap;
+}
+@keyframes brand-flicker {
+  0%,100%{opacity:1;} 92%{opacity:1;} 93%{opacity:0.6;} 94%{opacity:1;} 97%{opacity:0.8;} 98%{opacity:1;}
+}
 
-    @keyframes blip {
-      0%, 100% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: 1; transform: scale(1.2); }
-    }
+.topbar-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); flex-shrink: 0;
+  box-shadow: 0 0 10px var(--red-glow);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100%{opacity:1; box-shadow:0 0 10px var(--red-glow);}
+  50%{opacity:0.4; box-shadow:0 0 3px var(--red-dim);}
+}
 
-    .status-text {
-      font-size: 0.7rem;
-      color: var(--neon-cyan);
-      letter-spacing: 2px;
-      text-align: center;
-    }
+.topbar-nav {
+  display: flex; gap: 4px; margin-left: auto; align-items: center;
+}
 
-    @media(max-width: 600px) { .login-card { flex-direction: column; } .card-right { border-top: 1px solid var(--glass-border); } }
-  </style>
+.nav-btn {
+  padding: 7px 14px; border-radius: 4px; border: none;
+  background: transparent; color: rgba(180,80,80,0.6);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+  cursor: pointer; transition: all var(--transition);
+  text-transform: uppercase; position: relative; overflow: hidden;
+}
+.nav-btn::before {
+  content:''; position:absolute; inset:0;
+  background: var(--red-lo);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.nav-btn:hover::before, .nav-btn.active::before { transform: scaleX(1); }
+.nav-btn:hover, .nav-btn.active {
+  color: var(--red);
+  text-shadow: 0 0 8px var(--red-glow);
+}
+.nav-btn.active {
+  border: 1px solid var(--border-red);
+}
+.nav-btn i { margin-right: 5px; }
+
+.topbar-user {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1px; color: rgba(180,80,80,0.5);
+  padding: 6px 10px;
+  border: 1px solid var(--blood);
+  border-radius: 3px; white-space: nowrap;
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-user i { margin-right: 4px; color: var(--red-dim); }
+
+.btn-logout-top {
+  padding: 7px 12px; border-radius: 4px;
+  border: 1px solid var(--blood);
+  background: transparent; color: rgba(180,0,0,0.6);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-logout-top:hover {
+  border-color: var(--red); color: var(--red);
+  background: var(--red-lo);
+}
+
+/* ── MAIN CONTENT ── */
+#main-content {
+  margin-top: var(--topbar-h);
+  flex: 1;
+  padding: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE SECTIONS (SPA views)
+═══════════════════════════════════════════════ */
+.page-section {
+  display: none;
+  min-height: calc(100vh - var(--topbar-h));
+  animation: section-in 0.35s ease forwards;
+}
+.page-section.active { display: block; }
+
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   ██ LOGIN PAGE
+═══════════════════════════════════════════════ */
+#page-login {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 20px;
+  background: radial-gradient(ellipse at center, rgba(80,0,0,0.15) 0%, transparent 70%);
+}
+#page-login.active { display: flex; }
+
+.login-wrap {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+
+.login-logo {
+  font-family: var(--font-horror);
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red-glow), 0 0 60px rgba(255,0,0,0.25);
+  animation: brand-flicker 5s infinite, logo-drift 6s ease-in-out infinite;
+  letter-spacing: 3px; text-align: center; margin-bottom: 6px;
+}
+@keyframes logo-drift {
+  0%,100% { text-shadow: 0 0 20px var(--red-glow), 0 0 60px rgba(255,0,0,0.25); }
+  50% { text-shadow: 0 0 35px var(--red-glow), 0 0 80px rgba(255,0,0,0.4), 0 0 120px rgba(255,0,0,0.15); }
+}
+
+.login-tagline {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 4px;
+  color: rgba(180,0,0,0.6); text-align: center; margin-bottom: 40px;
+}
+
+.login-card {
+  width: 100%;
+  background: rgba(5,0,8,0.95);
+  border: 1px solid var(--border-red);
+  border-radius: 8px; padding: 32px 28px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 0 40px rgba(180,0,0,0.12), inset 0 0 60px rgba(80,0,0,0.06);
+}
+.login-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+  box-shadow: 0 0 12px var(--red-glow);
+}
+.login-card::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(255,0,0,0.2), transparent);
+}
+
+.login-section-title {
+  font-family: var(--font-cyber); font-size: 10px; font-weight: 700;
+  letter-spacing: 4px; color: rgba(200,0,0,0.7);
+  margin-bottom: 24px; text-transform: uppercase;
+}
+
+.field-wrap { position: relative; margin-bottom: 16px; }
+.field-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: rgba(180,0,0,0.5); font-size: 13px; pointer-events: none; z-index: 1;
+}
+.cyber-input {
+  width: 100%; padding: 14px 14px 14px 38px;
+  background: rgba(20,0,0,0.6); border: 1px solid var(--blood);
+  border-radius: 4px; color: rgba(255,150,150,0.9);
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
+  outline: none; transition: all 0.2s;
+  appearance: none; -webkit-appearance: none;
+}
+.cyber-input::placeholder { color: rgba(150,0,0,0.5); font-size: 11px; letter-spacing: 2px; }
+.cyber-input:focus {
+  border-color: var(--red-dim);
+  background: rgba(30,0,0,0.75);
+  box-shadow: 0 0 14px rgba(255,0,0,0.15), inset 0 0 10px rgba(255,0,0,0.04);
+}
+.cyber-input:focus + .scan-line { opacity: 1; }
+.scan-line {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+  opacity: 0; transition: opacity 0.3s;
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+.btn-auth {
+  width: 100%; padding: 15px; margin-top: 6px;
+  background: transparent; border: 1px solid var(--red-dim);
+  border-radius: 4px; color: var(--red);
+  font-family: var(--font-cyber); font-size: 12px; font-weight: 700; letter-spacing: 4px;
+  cursor: pointer; position: relative; overflow: hidden; transition: color 0.25s;
+  box-shadow: 0 0 15px rgba(255,0,0,0.1);
+}
+.btn-auth::before {
+  content:''; position:absolute; inset:0; background: var(--red-dim);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; z-index:0;
+}
+.btn-auth:hover::before, .btn-auth:active::before { transform: scaleX(1); }
+.btn-auth:hover, .btn-auth:active { color: #000; box-shadow: 0 0 25px var(--red-glow); }
+.btn-auth span { position: relative; z-index: 1; }
+.btn-auth:disabled { opacity: 0.45; cursor: not-allowed; }
+
+#login-status {
+  margin-top: 12px; font-size: 10px; letter-spacing: 2px;
+  text-align: center; min-height: 16px; color: var(--red);
+}
+
+/* Radar */
+.radar-container {
+  margin-top: 32px; text-align: center;
+}
+.radar-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px;
+  color: rgba(180,0,0,0.4); margin-bottom: 12px;
+}
+.radar-svg { width: 120px; height: 120px; }
+.radar-sweep {
+  transform-origin: 50% 50%;
+  animation: sweep 3.5s linear infinite;
+}
+@keyframes sweep { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+/* ═══════════════════════════════════════════════
+   ██ DASHBOARD PAGE
+═══════════════════════════════════════════════ */
+#page-dashboard { padding: 32px 20px 60px; max-width: 960px; margin: 0 auto; }
+
+.dash-header { margin-bottom: 32px; }
+.dash-title {
+  font-family: var(--font-horror);
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red-glow);
+  animation: brand-flicker 5s infinite;
+}
+.dash-sub {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px;
+  color: rgba(180,0,0,0.5); margin-top: 6px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 32px;
+}
+.stat-tile {
+  background: rgba(8,0,0,0.85);
+  border: 1px solid var(--border-red); border-radius: 6px;
+  padding: 20px 16px; text-align: center; position: relative; overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.stat-tile::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--red-dim), transparent);
+}
+.stat-tile:hover { border-color: var(--red-dim); box-shadow: 0 0 20px rgba(255,0,0,0.08); }
+.stat-icon { font-size: 1.2rem; margin-bottom: 8px; color: rgba(200,0,0,0.7); }
+.stat-val {
+  font-family: var(--font-cyber); font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 900; color: var(--red);
+  text-shadow: 0 0 10px var(--red-glow); line-height: 1;
+}
+.stat-label {
+  margin-top: 5px; font-size: 9px; letter-spacing: 2px;
+  color: rgba(180,0,0,0.5); text-transform: uppercase;
+}
+
+/* Nav cards */
+.section-heading {
+  font-family: var(--font-cyber); font-size: 10px; font-weight: 700;
+  letter-spacing: 4px; color: rgba(180,0,0,0.6);
+  margin-bottom: 16px; padding-left: 10px;
+  border-left: 2px solid var(--red-dim);
+}
+
+.dash-nav-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+}
+.dash-nav-card {
+  background: rgba(8,0,0,0.85);
+  border: 1px solid var(--border-red); border-radius: 6px;
+  padding: 22px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s;
+}
+.dash-nav-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent-color, var(--red-dim)), transparent);
+}
+.dash-nav-card:hover {
+  border-color: var(--accent-color, var(--red-dim));
+  box-shadow: 0 0 24px rgba(255,0,0,0.1);
+  transform: translateY(-2px);
+}
+.dash-nav-card:active { transform: scale(0.98); }
+.dnc-icon { font-size: 1.3rem; }
+.dnc-title {
+  font-family: var(--font-cyber); font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--accent-color, var(--red));
+  text-shadow: 0 0 8px var(--accent-color, var(--red-glow));
+}
+.dnc-desc { font-size: 10px; letter-spacing: 1px; color: rgba(180,0,0,0.45); line-height: 1.6; }
+.dnc-arrow {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 18px; color: rgba(180,0,0,0.3); transition: all 0.2s;
+}
+.dash-nav-card:hover .dnc-arrow { color: var(--accent-color, var(--red)); right: 12px; }
+
+/* ═══════════════════════════════════════════════
+   ██ VICTIMS / DATA LOG PAGE
+═══════════════════════════════════════════════ */
+#page-victims { padding: 28px 20px 60px; max-width: 1000px; margin: 0 auto; }
+
+.page-header-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: 14px; margin-bottom: 24px;
+}
+.page-title-horror {
+  font-family: var(--font-horror);
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  color: var(--red); text-shadow: 0 0 15px var(--red-glow);
+  animation: brand-flicker 5s infinite;
+}
+.page-sub-mono {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px;
+  color: rgba(180,0,0,0.45); margin-top: 4px;
+}
+
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cyber-btn {
+  padding: 9px 18px; border-radius: 5px; border: 1px solid;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.cyber-btn-red {
+  background: rgba(80,0,0,0.3); border-color: var(--blood);
+  color: rgba(200,0,0,0.8);
+}
+.cyber-btn-red:hover { background: rgba(120,0,0,0.5); border-color: var(--red-dim); color: var(--red); }
+.cyber-btn-green {
+  background: rgba(0,40,10,0.4); border-color: rgba(0,180,60,0.4);
+  color: rgba(0,220,80,0.8);
+}
+.cyber-btn-green:hover { background: rgba(0,60,15,0.5); border-color: rgba(0,255,80,0.6); color: var(--green); }
+.cyber-btn-ghost {
+  background: transparent; border-color: var(--blood); color: rgba(200,0,0,0.5);
+}
+.cyber-btn-ghost:hover { border-color: var(--red-dim); color: var(--red); }
+
+/* Filter bar */
+.filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.filter-input, .filter-select {
+  padding: 8px 12px; border-radius: 5px;
+  border: 1px solid var(--blood);
+  background: rgba(15,0,0,0.7); color: rgba(220,120,120,0.9);
+  font-family: var(--font-mono); font-size: 11px; outline: none;
+  transition: border-color 0.2s;
+}
+.filter-input { min-width: 200px; }
+.filter-input::placeholder { color: rgba(150,0,0,0.5); }
+.filter-input:focus, .filter-select:focus { border-color: var(--red-dim); }
+.filter-select option { background: #0a0000; }
+
+.count-bar {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+  color: rgba(180,0,0,0.45); margin-bottom: 10px;
+}
+
+/* Table */
+.table-shell {
+  background: rgba(5,0,0,0.9);
+  border: 1px solid var(--border-red); border-radius: 8px;
+  overflow-x: auto;
+}
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table thead th {
+  padding: 12px 14px;
+  background: rgba(20,0,0,0.8);
+  border-bottom: 1px solid var(--border-red);
+  color: rgba(180,0,0,0.7); font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  text-align: left; white-space: nowrap; font-weight: 400;
+}
+.data-table tbody tr {
+  border-bottom: 1px solid rgba(80,0,0,0.3);
+  transition: background 0.15s;
+}
+.data-table tbody tr:hover { background: rgba(30,0,0,0.5); }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table td {
+  padding: 11px 14px; color: rgba(220,150,150,0.8);
+  vertical-align: middle; white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
+}
+.badge-new       { background: rgba(91,141,238,0.15); color: #5b8dee; border: 1px solid rgba(91,141,238,0.3); }
+.badge-contacted { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+.badge-qualified { background: rgba(72,199,142,0.15); color: #48c78e; border: 1px solid rgba(72,199,142,0.3); }
+.badge-closed    { background: rgba(255,26,26,0.15);  color: var(--red); border: 1px solid var(--border-red); }
+
+.del-btn {
+  background: transparent; border: 1px solid rgba(180,0,0,0.3);
+  color: rgba(180,0,0,0.6); padding: 4px 10px; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 9px; cursor: pointer; transition: all 0.2s;
+}
+.del-btn:hover { background: rgba(180,0,0,0.15); color: var(--red); border-color: var(--red); }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 2px; color: rgba(150,0,0,0.5);
+}
+
+/* ═══════════════════════════════════════════════
+   ██ CREATE / LEAD FORM PAGE
+═══════════════════════════════════════════════ */
+#page-create { padding: 28px 20px 60px; max-width: 620px; margin: 0 auto; }
+
+.create-card {
+  background: rgba(5,0,0,0.92);
+  border: 1px solid var(--border-red); border-radius: 8px; overflow: hidden;
+  box-shadow: 0 0 40px rgba(180,0,0,0.1);
+}
+.card-top-bar { height: 3px; background: linear-gradient(90deg, var(--crimson), var(--red), var(--orange)); }
+.create-card-head {
+  padding: 28px 28px 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.create-card-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+.create-card-foot {
+  padding: 18px 28px; border-top: 1px solid var(--border-red);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+
+.field-label-horror {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px;
+  color: rgba(180,0,0,0.7); text-transform: uppercase; display: block;
+  margin-bottom: 7px;
+}
+.req { color: var(--red); }
+
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px;
+  background: rgba(15,0,0,0.7); border: 1px solid var(--blood);
+  border-radius: 5px; color: rgba(220,150,150,0.9);
+  font-family: var(--font-mono); font-size: 13px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-textarea { resize: vertical; min-height: 80px; font-family: var(--font-mono); }
+.form-input::placeholder, .form-textarea::placeholder { color: rgba(120,0,0,0.5); font-size: 11px; }
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--red-dim);
+  box-shadow: 0 0 12px rgba(255,0,0,0.1);
+}
+.form-select option { background: #0a0000; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.btn-submit-horror {
+  padding: 14px 28px; border-radius: 5px;
+  border: 1px solid var(--red-dim); background: transparent;
+  color: var(--red); font-family: var(--font-cyber);
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  cursor: pointer; position: relative; overflow: hidden; transition: color 0.25s;
+}
+.btn-submit-horror::before {
+  content:''; position:absolute; inset:0; background: var(--red-dim);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.3s; z-index:0;
+}
+.btn-submit-horror:hover::before { transform: scaleX(1); }
+.btn-submit-horror:hover { color: #000; }
+.btn-submit-horror span { position: relative; z-index: 1; }
+.btn-submit-horror:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.form-status {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+  color: rgba(180,0,0,0.5);
+}
+
+/* ═══════════════════════════════════════════════
+   ██ LINKS / LINK GENERATOR PAGE
+═══════════════════════════════════════════════ */
+#page-links { padding: 28px 20px 60px; max-width: 680px; margin: 0 auto; }
+
+/* Menu cards (horror style) */
+.horror-menu { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+
+.horror-card {
+  background: rgba(8,0,0,0.85);
+  border: 1px solid var(--blood); border-radius: 8px;
+  padding: 18px 20px; cursor: pointer;
+  display: flex; align-items: center; gap: 18px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s, background 0.3s;
+}
+.horror-card:hover { border-color: rgba(200,0,0,0.5); background: rgba(20,0,0,0.9); }
+.horror-card.active-fire {
+  border-color: var(--orange); background: rgba(30,5,0,0.95);
+  animation: quake 0.12s ease-in-out 2;
+}
+@keyframes quake { 0%,100%{transform:translateX(0);} 50%{transform:translateX(3px);} }
+
+.horror-icon-box {
+  width: 52px; height: 52px; flex-shrink: 0;
+  background: rgba(60,0,0,0.4); border: 1px solid var(--blood);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: filter 0.3s;
+}
+.horror-card.active-fire .horror-icon-box {
+  filter: drop-shadow(0 0 12px #ff6600);
+  border-color: var(--orange); background: rgba(100,20,0,0.5);
+}
+
+.horror-card-text { flex: 1; }
+.horror-card-title {
+  font-family: var(--font-horror); font-size: clamp(14px, 3vw, 18px);
+  color: var(--red-dim); letter-spacing: 2px; text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255,0,0,0.4);
+  animation: float-text 3s ease-in-out infinite; display: inline-block;
+}
+.horror-card:nth-child(1) .horror-card-title { animation-delay: 0s; }
+.horror-card:nth-child(2) .horror-card-title { animation-delay: 1.1s; }
+.horror-card:nth-child(3) .horror-card-title { animation-delay: 2.2s; }
+@keyframes float-text {
+  0%,100%{transform:translateY(0);} 50%{transform:translateY(-3px); text-shadow: 0 0 18px rgba(255,0,0,0.7);}
+}
+.horror-card.active-fire .horror-card-title {
+  animation: fire-text 0.4s infinite alternate; color: var(--orange);
+}
+@keyframes fire-text {
+  0%{text-shadow:0 0 10px #f00,0 0 30px #f60;color:#f40;}
+  100%{text-shadow:0 0 20px #fa0,0 0 50px #f60;color:#faa000;}
+}
+.horror-card-sub {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+  color: rgba(120,0,0,0.7); text-transform: uppercase; margin-top: 3px;
+}
+.horror-card-count {
+  font-family: var(--font-mono); font-size: 10px; color: var(--orange); margin-top: 4px;
+}
+.horror-arrow { color: rgba(120,0,0,0.5); font-size: 20px; transition: all 0.2s; }
+.horror-card:hover .horror-arrow { color: var(--red); transform: translateX(4px); }
+
+/* Ember particles */
+.ember {
+  position: absolute; bottom: 0; width: 4px; height: 4px; border-radius: 50%;
+  pointer-events: none; z-index: 1; opacity: 0;
+}
+.horror-card.active-fire .ember { animation: rise-ember 0.8s ease-out forwards; }
+@keyframes rise-ember {
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-55px) scale(0.2) translateX(var(--dx,0));}
+}
+
+/* Expand panels */
+.expand-panel {
+  background: rgba(6,0,0,0.9); border: 1px solid var(--blood);
+  border-top: none; border-radius: 0 0 8px 8px;
+  padding: 0; max-height: 0; overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+}
+.expand-panel.open { max-height: 600px; padding: 20px; overflow-y: auto; }
+
+.expand-title {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px;
+  color: rgba(180,0,0,0.6); text-transform: uppercase;
+  border-bottom: 1px solid var(--blood); padding-bottom: 10px; margin-bottom: 16px;
+}
+
+.link-result-box {
+  background: rgba(15,0,0,0.9); border: 1px solid var(--blood);
+  border-radius: 5px; padding: 12px; margin-top: 10px; display: none;
+}
+.link-result-box.show { display: block; }
+.link-result-url {
+  font-family: var(--font-mono); font-size: 10px; color: rgba(255,100,60,0.9);
+  word-break: break-all; line-height: 1.6; padding: 8px;
+  background: rgba(0,0,0,0.5); border-radius: 3px; margin: 8px 0;
+}
+.btn-copy-result {
+  padding: 6px 14px; border-radius: 3px;
+  border: 1px solid rgba(180,0,0,0.4); background: transparent;
+  color: rgba(180,0,0,0.7); font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+}
+.btn-copy-result:hover, .btn-copy-result.copied {
+  background: rgba(100,0,0,0.4); color: var(--red); border-color: var(--red);
+}
+
+.saved-link-item {
+  background: rgba(10,0,0,0.7); border: 1px solid rgba(60,0,0,0.5);
+  border-radius: 5px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.sli-name { font-family: var(--font-mono); font-size: 11px; color: rgba(200,60,60,0.9); flex: 1; min-width: 0; }
+.sli-meta { font-family: var(--font-mono); font-size: 9px; color: rgba(120,0,0,0.6); letter-spacing: 1px; }
+.sli-btns { display: flex; gap: 5px; flex-shrink: 0; }
+.sli-btn {
+  padding: 4px 8px; border-radius: 3px; border: 1px solid;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+}
+.sli-copy { border-color: rgba(120,0,0,0.5); color: rgba(180,0,0,0.7); background: transparent; }
+.sli-copy:hover { border-color: var(--red); color: var(--red); }
+.sli-del  { border-color: rgba(80,0,0,0.4); color: rgba(140,0,0,0.6); background: transparent; }
+.sli-del:hover  { border-color: var(--red); color: var(--red); }
+
+/* ═══════════════════════════════════════════════
+   ██ TEMPLATES (CUSTOMER DATA) PAGE
+═══════════════════════════════════════════════ */
+#page-templates { padding: 28px 20px 60px; max-width: 1000px; margin: 0 auto; }
+
+.template-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.template-search {
+  padding: 8px 12px 8px 32px; border-radius: 5px;
+  border: 1px solid var(--blood);
+  background: rgba(15,0,0,0.7); color: rgba(220,120,120,0.9);
+  font-family: var(--font-mono); font-size: 11px; outline: none;
+  min-width: 200px; transition: border-color 0.2s; position: relative;
+}
+.template-search::placeholder { color: rgba(120,0,0,0.5); }
+.template-search:focus { border-color: var(--red-dim); }
+
+.filter-pill {
+  padding: 6px 14px; border-radius: 20px; border: 1px solid var(--blood);
+  background: transparent; color: rgba(180,0,0,0.5);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.filter-pill:hover { border-color: var(--red-dim); color: var(--red); }
+.filter-pill.active { border-color: var(--red-dim); color: var(--red); background: var(--red-lo); }
+
+.templates-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;
+}
+
+.tpl-card {
+  background: rgba(6,0,0,0.9); border: 1px solid var(--blood);
+  border-radius: 8px; overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+  display: flex; flex-direction: column;
+}
+.tpl-card:hover {
+  border-color: rgba(200,0,0,0.5);
+  box-shadow: 0 8px 30px rgba(180,0,0,0.1);
+  transform: translateY(-2px);
+}
+.tpl-thumb {
+  height: 120px; position: relative;
+  background: linear-gradient(135deg, #1a0000, #0d0020);
+  overflow: hidden;
+}
+.tpl-thumb-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(6,0,0,0.95) 100%);
+}
+.tpl-badge {
+  position: absolute; top: 8px; left: 8px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 2px;
+  background: rgba(180,0,0,0.2); border: 1px solid var(--border-red);
+  color: var(--red-dim); padding: 3px 8px; border-radius: 3px;
+}
+.tpl-status-dot {
+  position: absolute; top: 8px; right: 8px;
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 8px; color: rgba(180,0,0,0.5);
+  background: rgba(0,0,0,0.8); padding: 3px 8px; border-radius: 3px; border: 1px solid var(--blood);
+}
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red-dim); }
+.dot.active-dot { background: #48c78e; box-shadow: 0 0 6px #48c78e88; animation: pulse-dot 2s infinite; }
+
+.tpl-body { padding: 14px; flex: 1; }
+.tpl-name { font-size: 13px; font-weight: 700; color: rgba(220,150,150,0.9); font-family: var(--font-body); margin-bottom: 5px; }
+.tpl-desc { font-family: var(--font-mono); font-size: 9px; color: rgba(150,50,50,0.6); line-height: 1.5; margin-bottom: 10px; }
+.tpl-meta { font-family: var(--font-mono); font-size: 9px; color: rgba(120,0,0,0.5); letter-spacing: 1px; }
+.tpl-stats { display: flex; gap: 8px; margin-top: 8px; }
+.tpl-stat-pill {
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  background: rgba(10,0,0,0.8); border: 1px solid var(--blood);
+  color: rgba(150,0,0,0.6); padding: 3px 7px; border-radius: 3px;
+}
+.tpl-stat-pill span { color: rgba(220,60,60,0.8); }
+
+.tpl-actions {
+  padding: 10px 14px; border-top: 1px solid var(--blood);
+  display: flex; gap: 7px;
+}
+.tpl-btn {
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px;
+  padding: 6px 10px; border-radius: 3px; border: 1px solid; cursor: pointer; transition: all 0.2s;
+}
+.tpl-copy { background: var(--red-lo); border-color: var(--border-red); color: var(--red-dim); }
+.tpl-copy:hover { background: rgba(180,0,0,0.2); }
+.tpl-edit { background: transparent; border-color: var(--blood); color: rgba(180,0,0,0.5); }
+.tpl-edit:hover { border-color: var(--red-dim); color: var(--red-dim); }
+.tpl-del  { background: transparent; border-color: rgba(60,0,0,0.5); color: rgba(150,0,0,0.5); margin-left: auto; }
+.tpl-del:hover  { border-color: var(--red); color: var(--red); }
+
+/* Template Generator mini form */
+.tpl-gen-form {
+  background: rgba(5,0,0,0.92); border: 1px solid var(--border-red);
+  border-radius: 8px; padding: 24px; margin-top: 0;
+  display: none;
+}
+.tpl-gen-form.show { display: block; }
+
+/* ═══════════════════════════════════════════════
+   ██ TOAST NOTIFICATION
+═══════════════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(5,0,0,0.97); border: 1px solid var(--border-red);
+  border-radius: 5px; padding: 12px 20px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 2px; color: var(--red); white-space: nowrap;
+  opacity: 0; transition: all 0.3s ease; z-index: 9999; pointer-events: none;
+  box-shadow: 0 0 20px rgba(255,0,0,0.15);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red-glow); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════
+   ██ CONFIRM MODAL
+═══════════════════════════════════════════════ */
+#modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+  z-index: 8000; display: none; align-items: center; justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+.modal-box {
+  background: rgba(8,0,0,0.98); border: 1px solid var(--border-red);
+  border-radius: 8px; padding: 28px; max-width: 360px; width: 90%;
+  box-shadow: 0 0 50px rgba(255,0,0,0.15);
+}
+.modal-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.modal-title { font-family: var(--font-horror); font-size: 1.2rem; color: var(--red); margin-bottom: 10px; }
+.modal-body { font-family: var(--font-mono); font-size: 11px; color: rgba(200,100,100,0.8); line-height: 1.6; margin-bottom: 20px; }
+.modal-body strong { color: var(--red); }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ═══════════════════════════════════════════════
+   ██ LOADING SPINNER
+═══════════════════════════════════════════════ */
+.loading-horror {
+  text-align: center; padding: 40px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 3px; color: rgba(150,0,0,0.5);
+  animation: flicker-load 1.5s infinite;
+}
+@keyframes flicker-load { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+/* ═══════════════════════════════════════════════
+   ██ RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .topbar-nav .nav-btn span { display: none; }
+  .topbar-user { display: none; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .filter-bar { flex-direction: column; }
+  .filter-input { min-width: unset; width: 100%; }
+  .page-header-row { flex-direction: column; align-items: flex-start; }
+  .dash-nav-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .template-toolbar { flex-direction: column; align-items: flex-start; }
+  .template-search { min-width: unset; width: 100%; }
+}
+</style>
 </head>
 <body>
 
+<!-- ═══ BACKGROUND LAYERS ═══ -->
 <canvas id="matrix-canvas"></canvas>
+<div class="scanlines"></div>
 <div class="vignette"></div>
+<div class="bg-drips" id="bg-drips"></div>
 
-<div class="portal-wrapper">
-  <header class="portal-header">
-    <div class="logo">CYBERGUARD</div>
-    <div class="status-text">// INTRUSION DETECTION SYSTEM ACTIVE</div>
+<!-- ═══ APP SHELL ═══ -->
+<div id="app">
+
+  <!-- ── TOP BAR (hidden on login) ── -->
+  <header id="topbar" style="display:none;">
+    <div class="topbar-pulse"></div>
+    <span class="topbar-brand">⛓ CYBERGUARD</span>
+
+    <nav class="topbar-nav">
+      <button class="nav-btn active" onclick="showPage('dashboard')" data-page="dashboard">
+        <i class="fa-solid fa-skull"></i><span>BASE</span>
+      </button>
+      <button class="nav-btn" onclick="showPage('victims')" data-page="victims">
+        <i class="fa-solid fa-tombstone"></i><span>VICTIMS</span>
+      </button>
+      <button class="nav-btn" onclick="showPage('create')" data-page="create">
+        <i class="fa-solid fa-syringe"></i><span>CREATE</span>
+      </button>
+      <button class="nav-btn" onclick="showPage('links')" data-page="links">
+        <i class="fa-solid fa-link-slash"></i><span>LINKS</span>
+      </button>
+      <button class="nav-btn" onclick="showPage('templates')" data-page="templates">
+        <i class="fa-solid fa-scroll"></i><span>SCROLLS</span>
+      </button>
+    </nav>
+
+    <div class="topbar-user" id="topbar-user">
+      <i class="fa-solid fa-ghost"></i><span id="user-email-display">—</span>
+    </div>
+    <button class="btn-logout-top" onclick="doLogout()">
+      <i class="fa-solid fa-door-open"></i> FLEE
+    </button>
   </header>
 
-  <div class="login-card">
-    <div class="card-left">
-      <div style="color:var(--neon-cyan)">// AUTHENTICATION</div>
-      <input type="text" placeholder="OPERATOR ID">
-      <input type="password" placeholder="ACCESS KEY">
-      <button class="btn-login">AUTHENTICATE</button>
-    </div>
+  <!-- ── MAIN ── -->
+  <main id="main-content">
 
-    <div class="card-right">
-      <div class="status-text">RADAR SCANNER</div>
-      <div class="radar-container">
-        <div class="radar-grid"></div>
-        <div class="radar-sweep"></div>
-        <div class="red-blip" style="top:30%; left:40%; animation-delay: 0.5s;"></div>
-        <div class="red-blip" style="top:70%; left:20%; animation-delay: 1.2s;"></div>
-        <div class="red-blip" style="top:50%; left:80%; animation-delay: 2s;"></div>
+    <!-- ████ LOGIN PAGE ████ -->
+    <section id="page-login" class="page-section active">
+      <div class="login-wrap">
+        <div class="login-logo">CYBERGUARD</div>
+        <div class="login-tagline">// SURVEY &amp; CUSTOMER DATA MANAGEMENT SYSTEM</div>
+
+        <div class="login-card">
+          <div class="login-section-title">
+            <i class="fa-solid fa-lock" style="margin-right:8px;"></i>SYSTEM AUTHENTICATION
+          </div>
+
+          <div class="field-wrap">
+            <i class="fa-solid fa-envelope field-icon"></i>
+            <input class="cyber-input" type="email" id="login-email" placeholder="ENTER EMAIL ADDRESS" autocomplete="email"/>
+            <div class="scan-line"></div>
+          </div>
+
+          <div class="field-wrap">
+            <i class="fa-solid fa-key field-icon"></i>
+            <input class="cyber-input" type="password" id="login-password" placeholder="ENTER PASSWORD" autocomplete="current-password"/>
+            <div class="scan-line"></div>
+          </div>
+
+          <button class="btn-auth" id="login-btn" onclick="doLogin()">
+            <span><i class="fa-solid fa-bolt"></i> &nbsp;AUTHENTICATE</span>
+          </button>
+          <div id="login-status"></div>
+        </div>
+
+        <div class="radar-container">
+          <div class="radar-label">// SCANNING FOR ACTIVE SESSIONS</div>
+          <svg class="radar-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(180,0,0,0.15)" stroke-width="1"/>
+            <circle cx="50" cy="50" r="32" fill="none" stroke="rgba(180,0,0,0.1)"  stroke-width="1"/>
+            <circle cx="50" cy="50" r="16" fill="none" stroke="rgba(180,0,0,0.1)"  stroke-width="1"/>
+            <line x1="50" y1="2"  x2="50" y2="98" stroke="rgba(180,0,0,0.08)" stroke-width="0.5"/>
+            <line x1="2"  y1="50" x2="98" y2="50" stroke="rgba(180,0,0,0.08)" stroke-width="0.5"/>
+            <g class="radar-sweep">
+              <path d="M50 50 L50 2 A48 48 0 0 1 98 50 Z" fill="url(#rg)" opacity="0.4"/>
+            </g>
+            <defs>
+              <radialGradient id="rg" cx="0%" cy="50%" r="100%">
+                <stop offset="0%"   stop-color="#ff0000" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#ff0000" stop-opacity="0.6"/>
+              </radialGradient>
+            </defs>
+            <circle cx="68" cy="30" r="2.5" fill="#ff0000" opacity="0.6">
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="2.1s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="35" cy="65" r="1.8" fill="#ff4400" opacity="0.5">
+              <animate attributeName="opacity" values="0.5;0;0.5" dur="1.7s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
       </div>
-      <div class="status-text" id="radar-msg">[SYS] SCANNING FOR THREATS...</div>
+    </section>
+
+    <!-- ████ DASHBOARD PAGE ████ -->
+    <section id="page-dashboard" class="page-section">
+      <div class="dash-header">
+        <div class="dash-title"><i class="fa-solid fa-skull-crossbones"></i> COMMAND CENTER</div>
+        <div class="dash-sub">// SURVEY &amp; CUSTOMER DATA MANAGEMENT — FIREBASE POWERED</div>
+      </div>
+
+      <div class="section-heading"><i class="fa-solid fa-chart-line" style="margin-right:8px;"></i>SYSTEM OVERVIEW</div>
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <div class="stat-icon"><i class="fa-solid fa-tombstone"></i></div>
+          <div class="stat-val" id="stat-leads">—</div>
+          <div class="stat-label">Total Victims</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon"><i class="fa-solid fa-scroll"></i></div>
+          <div class="stat-val" id="stat-templates">—</div>
+          <div class="stat-label">Scrolls</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon"><i class="fa-solid fa-link-slash"></i></div>
+          <div class="stat-val" id="stat-links">—</div>
+          <div class="stat-label">Cursed Links</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon"><i class="fa-solid fa-ghost"></i></div>
+          <div class="stat-val" id="stat-new">—</div>
+          <div class="stat-label">New Souls</div>
+        </div>
+      </div>
+
+      <div class="section-heading" style="margin-top:28px;"><i class="fa-solid fa-dungeon" style="margin-right:8px;"></i>NAVIGATE</div>
+      <div class="dash-nav-grid">
+        <div class="dash-nav-card" onclick="showPage('create')" style="--accent-color:#cc0000;">
+          <div class="dnc-icon"><i class="fa-solid fa-syringe"></i></div>
+          <div class="dnc-title">CREATE VICTIM</div>
+          <div class="dnc-desc">Submit new lead or survey. Data saved to Firebase instantly.</div>
+          <div class="dnc-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="dash-nav-card" onclick="showPage('victims')" style="--accent-color:#ff4400;">
+          <div class="dnc-icon"><i class="fa-solid fa-tombstone"></i></div>
+          <div class="dnc-title">VICTIMS LOG</div>
+          <div class="dnc-desc">View, filter and export all collected leads from Firebase.</div>
+          <div class="dnc-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="dash-nav-card" onclick="showPage('templates')" style="--accent-color:#9d00ff;">
+          <div class="dnc-icon"><i class="fa-solid fa-scroll"></i></div>
+          <div class="dnc-title">CURSED SCROLLS</div>
+          <div class="dnc-desc">Manage and generate customer templates stored in Firebase.</div>
+          <div class="dnc-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="dash-nav-card" onclick="showPage('links')" style="--accent-color:#ff1a1a;">
+          <div class="dnc-icon"><i class="fa-solid fa-link-slash"></i></div>
+          <div class="dnc-title">CURSED LINKS</div>
+          <div class="dnc-desc">Generate and manage tracked UTM links saved to Firebase.</div>
+          <div class="dnc-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ████ VICTIMS / DATA LOG ████ -->
+    <section id="page-victims" class="page-section">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title-horror"><i class="fa-solid fa-tombstone"></i> VICTIMS LOG</div>
+          <div class="page-sub-mono">// ALL SUBMITTED SOULS — LIVE FROM FIREBASE</div>
+        </div>
+        <div class="btn-row">
+          <button class="cyber-btn cyber-btn-red" onclick="loadLeads()"><i class="fa-solid fa-rotate"></i> REFRESH</button>
+          <button class="cyber-btn cyber-btn-green" onclick="exportCSV()"><i class="fa-solid fa-download"></i> CSV</button>
+          <button class="cyber-btn cyber-btn-ghost" onclick="showPage('create')"><i class="fa-solid fa-plus"></i> NEW</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input class="filter-input" type="text" id="v-search" placeholder="🔍 Search name, email, ID..." oninput="renderVictims()"/>
+        <select class="filter-select" id="v-source" onchange="renderVictims()">
+          <option value="">All Sources</option>
+          <option>LinkedIn</option><option>Instagram</option><option>Facebook</option>
+          <option>Cold Email</option><option>Referral</option><option>Website</option><option>Other</option>
+        </select>
+        <select class="filter-select" id="v-status" onchange="renderVictims()">
+          <option value="">All Statuses</option>
+          <option>New</option><option>Contacted</option><option>Qualified</option><option>Closed</option>
+        </select>
+      </div>
+      <div class="count-bar" id="victims-count">Loading...</div>
+
+      <div class="table-shell">
+        <div id="victims-loading" class="loading-horror">⏳ SUMMONING DATA FROM FIREBASE...</div>
+        <table class="data-table" id="victims-table" style="display:none;">
+          <thead>
+            <tr>
+              <th>#</th><th>USER ID</th><th>NAME</th><th>EMAIL</th>
+              <th>SOURCE</th><th>STATUS</th><th>DATE</th><th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="victims-tbody"></tbody>
+        </table>
+        <div class="empty-state" id="victims-empty" style="display:none;">
+          <i class="fa-solid fa-ghost" style="font-size:2rem;margin-bottom:10px;"></i><br/>
+          NO VICTIMS FOUND<br/><small style="font-size:9px;letter-spacing:2px;">SUBMIT A SOUL VIA THE CREATE PAGE</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- ████ CREATE / LEAD FORM ████ -->
+    <section id="page-create" class="page-section">
+      <div class="page-header-row" style="margin-bottom:20px;">
+        <div>
+          <div class="page-title-horror"><i class="fa-solid fa-syringe"></i> CAPTURE A SOUL</div>
+          <div class="page-sub-mono">// NEW LEAD / SURVEY — SAVES TO FIREBASE</div>
+        </div>
+      </div>
+
+      <div class="create-card">
+        <div class="card-top-bar"></div>
+        <div class="create-card-head">
+          <div>
+            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:3px;color:rgba(150,0,0,0.6);margin-bottom:6px;">// SECTION_01</div>
+            <div style="font-family:var(--font-horror);font-size:1.3rem;color:var(--red);text-shadow:0 0 10px var(--red-glow);">Soul Intake Form</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(150,0,0,0.5);margin-top:4px;">Fill all fields — data saves directly to Firebase</div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;background:var(--red-lo);border:1px solid var(--border-red);color:var(--red-dim);padding:6px 12px;border-radius:4px;">STEP 01 / 01</div>
+        </div>
+
+        <div class="create-card-body">
+          <div class="grid-2">
+            <div>
+              <label class="field-label-horror" for="c-userid">User ID <span class="req">*</span></label>
+              <input class="form-input" type="text" id="c-userid" placeholder="e.g. USR-00142"/>
+            </div>
+            <div>
+              <label class="field-label-horror" for="c-code">Access Code <span class="req">*</span></label>
+              <input class="form-input" type="text" id="c-code" placeholder="e.g. AC-9921X"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label-horror" for="c-name">Full Name <span class="req">*</span></label>
+            <input class="form-input" type="text" id="c-name" placeholder="Enter full name"/>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label class="field-label-horror" for="c-email">Email Address</label>
+              <input class="form-input" type="email" id="c-email" placeholder="email@example.com"/>
+            </div>
+            <div>
+              <label class="field-label-horror" for="c-phone">Phone</label>
+              <input class="form-input" type="tel" id="c-phone" placeholder="+880 1XXX XXXXXX"/>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label class="field-label-horror" for="c-source">Lead Source <span class="req">*</span></label>
+              <select class="form-select" id="c-source">
+                <option value="">— Select Source —</option>
+                <option>LinkedIn</option><option>Instagram</option><option>Facebook</option>
+                <option>Cold Email</option><option>Referral</option><option>Website</option><option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label-horror" for="c-status">Status</label>
+              <select class="form-select" id="c-status">
+                <option value="New">New</option><option value="Contacted">Contacted</option>
+                <option value="Qualified">Qualified</option><option value="Closed">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label-horror" for="c-notes">Notes</label>
+            <textarea class="form-textarea" id="c-notes" placeholder="Any additional notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="create-card-foot">
+          <div class="form-status" id="create-status">STATUS: <span style="color:rgba(150,0,0,0.5);">WAITING</span></div>
+          <div style="display:flex;gap:10px;">
+            <button class="cyber-btn cyber-btn-ghost" onclick="resetCreateForm()">
+              <i class="fa-solid fa-rotate-left"></i> RESET
+            </button>
+            <button class="btn-submit-horror" id="create-submit-btn" onclick="submitLead()">
+              <span><i class="fa-solid fa-skull"></i>&nbsp; CAPTURE SOUL</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ████ LINKS PAGE ████ -->
+    <section id="page-links" class="page-section">
+      <div class="page-header-row" style="margin-bottom:10px;">
+        <div>
+          <div class="page-title-horror"><i class="fa-solid fa-link-slash"></i> CURSED LINKS</div>
+          <div class="page-sub-mono">// TRACKING LINK GENERATOR — FIREBASE POWERED</div>
+        </div>
+      </div>
+
+      <div class="horror-menu">
+
+        <!-- Card 1: Create Link -->
+        <div>
+          <div class="horror-card" onclick="toggleExpand('expand-create'); fireCard(this)">
+            <div class="horror-icon-box"><i class="fa-solid fa-link-slash" style="color:#cc0000;"></i></div>
+            <div class="horror-card-text">
+              <div class="horror-card-title">CREATE</div>
+              <div class="horror-card-sub">FORGE A NEW TRACKING LINK</div>
+            </div>
+            <i class="fa-solid fa-chevron-down horror-arrow" id="arrow-create"></i>
+          </div>
+          <div class="expand-panel" id="expand-create">
+            <div class="expand-title"><i class="fa-solid fa-fire" style="margin-right:6px;"></i>// FORGE NEW LINK</div>
+
+            <div style="margin-bottom:14px;">
+              <label class="field-label-horror" for="l-name">Link Name / Label</label>
+              <input class="form-input" type="text" id="l-name" placeholder="e.g. Instagram Campaign #1"/>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label class="field-label-horror" for="l-url">Destination URL <span class="req">*</span></label>
+              <input class="form-input" type="url" id="l-url" placeholder="https://yoursite.com/page"/>
+            </div>
+            <div class="grid-2" style="margin-bottom:14px;">
+              <div>
+                <label class="field-label-horror" for="l-source">Traffic Source</label>
+                <select class="form-select" id="l-source">
+                  <option value="">— Select —</option>
+                  <option>Instagram</option><option>Facebook</option><option>WhatsApp</option>
+                  <option>LinkedIn</option><option>Email</option><option>SMS</option><option>QR Code</option><option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label-horror" for="l-campaign">Campaign (optional)</label>
+                <input class="form-input" type="text" id="l-campaign" placeholder="e.g. Summer2025"/>
+              </div>
+            </div>
+
+            <button class="btn-submit-horror" id="l-gen-btn" onclick="generateLink()" style="width:100%;">
+              <span><i class="fa-solid fa-bolt"></i>&nbsp; GENERATE &amp; SAVE TO FIREBASE</span>
+            </button>
+
+            <div class="link-result-box" id="link-result-box">
+              <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:rgba(180,0,0,0.6);">// YOUR CURSED LINK:</div>
+              <div class="link-result-url" id="link-result-url">—</div>
+              <button class="btn-copy-result" id="link-copy-btn" onclick="copyGeneratedLink()">
+                <i class="fa-solid fa-copy"></i> COPY LINK
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Saved Links -->
+        <div>
+          <div class="horror-card" onclick="toggleExpand('expand-saved'); fireCard(this); loadLinks()">
+            <div class="horror-icon-box"><i class="fa-solid fa-ghost" style="color:#cc0000;"></i></div>
+            <div class="horror-card-text">
+              <div class="horror-card-title">SAVED</div>
+              <div class="horror-card-sub">ALL GENERATED CURSED LINKS</div>
+              <div class="horror-card-count">TOTAL: <span id="links-count">0</span></div>
+            </div>
+            <i class="fa-solid fa-chevron-down horror-arrow" id="arrow-saved"></i>
+          </div>
+          <div class="expand-panel" id="expand-saved">
+            <div class="expand-title"><i class="fa-solid fa-database" style="margin-right:6px;"></i>// SAVED IN FIREBASE</div>
+            <div id="saved-links-list">
+              <div class="loading-horror">⏳ LOADING FROM FIREBASE...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Victims shortcut -->
+        <div class="horror-card" onclick="showPage('victims'); fireCard(this)">
+          <div class="horror-icon-box"><i class="fa-solid fa-tombstone" style="color:#cc0000;"></i></div>
+          <div class="horror-card-text">
+            <div class="horror-card-title">VICTIMS</div>
+            <div class="horror-card-sub">VIEW ALL CAPTURED SOULS</div>
+          </div>
+          <i class="fa-solid fa-chevron-right horror-arrow"></i>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ████ TEMPLATES PAGE ████ -->
+    <section id="page-templates" class="page-section">
+      <div class="page-header-row">
+        <div>
+          <div class="page-title-horror"><i class="fa-solid fa-scroll"></i> CURSED SCROLLS</div>
+          <div class="page-sub-mono">// CUSTOMER TEMPLATES — FIREBASE POWERED</div>
+        </div>
+        <button class="cyber-btn cyber-btn-red" onclick="toggleTemplateForm()">
+          <i class="fa-solid fa-plus"></i> NEW SCROLL
+        </button>
+      </div>
+
+      <!-- New Template Form -->
+      <div class="tpl-gen-form" id="tpl-gen-form">
+        <div class="expand-title"><i class="fa-solid fa-feather-pointed" style="margin-right:6px;"></i>// INSCRIBE NEW SCROLL</div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div>
+            <label class="field-label-horror" for="tg-name">Title <span class="req">*</span></label>
+            <input class="form-input" type="text" id="tg-name" placeholder="e.g. Product Launch Form"/>
+          </div>
+          <div>
+            <label class="field-label-horror" for="tg-badge">Badge Label</label>
+            <input class="form-input" type="text" id="tg-badge" placeholder="FORM / SURVEY" value="FORM"/>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="field-label-horror" for="tg-desc">Description</label>
+          <textarea class="form-textarea" id="tg-desc" style="min-height:60px;" placeholder="Brief description..."></textarea>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px;">
+          <div>
+            <label class="field-label-horror" for="tg-btn">Button Text</label>
+            <input class="form-input" type="text" id="tg-btn" value="Submit"/>
+          </div>
+          <div>
+            <label class="field-label-horror" for="tg-status">Status</label>
+            <select class="form-select" id="tg-status">
+              <option value="active">Active</option><option value="draft">Draft</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="cyber-btn cyber-btn-ghost" onclick="toggleTemplateForm()">CANCEL</button>
+          <button class="btn-submit-horror" onclick="saveTemplate()">
+            <span><i class="fa-solid fa-floppy-disk"></i>&nbsp; SAVE TO FIREBASE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="template-toolbar" style="margin-top:16px;">
+        <div style="position:relative;">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(150,0,0,0.5);font-size:12px;"></i>
+          <input class="template-search" style="padding-left:30px;" type="text" id="tpl-search" placeholder="Search scrolls..." oninput="renderTemplates()"/>
+        </div>
+        <button class="filter-pill active" onclick="setTplFilter('all',this)">ALL</button>
+        <button class="filter-pill" onclick="setTplFilter('active',this)">ACTIVE</button>
+        <button class="filter-pill" onclick="setTplFilter('draft',this)">DRAFT</button>
+      </div>
+
+      <div id="tpl-loading" class="loading-horror">⏳ SUMMONING SCROLLS FROM FIREBASE...</div>
+      <div class="templates-grid" id="templates-grid" style="display:none;"></div>
+      <div class="empty-state" id="tpl-empty" style="display:none;">
+        <i class="fa-solid fa-scroll" style="font-size:2rem;margin-bottom:10px;opacity:0.3;"></i><br/>
+        NO SCROLLS FOUND — INSCRIBE YOUR FIRST ONE ABOVE
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"><div class="toast-dot"></div><span id="toast-msg">—</span></div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">☠️</div>
+    <div class="modal-title">CONFIRM DELETION</div>
+    <div class="modal-body" id="modal-body">Delete this entry? This cannot be undone.</div>
+    <div class="modal-btns">
+      <button class="cyber-btn cyber-btn-ghost" onclick="closeModal()">CANCEL</button>
+      <button class="cyber-btn cyber-btn-red" id="modal-confirm-btn">DELETE</button>
     </div>
   </div>
 </div>
 
-<script>
-  // Matrix Rain Script
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT — ALL LOGIC
+═══════════════════════════════════════════════ -->
+<script type="module">
+/* ── Imports ── */
+import { initializeApp }                      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, push, get,
+         remove, set }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ── Firebase Config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBxuUB1O65UR80qzqfXDbZ6esnlOI5lZho",
+  authDomain:        "mypanel-62208.firebaseapp.com",
+  databaseURL:       "https://mypanel-62208-default-rtdb.firebaseio.com",
+  projectId:         "mypanel-62208",
+  storageBucket:     "mypanel-62208.firebasestorage.app",
+  messagingSenderId: "104732513953",
+  appId:             "1:104732513953:web:741a3e03456e8be73482e0",
+  measurementId:     "G-YVKM941LEV"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getDatabase(app);
+
+/* ═══════════════════════════════════════════════
+   1. MATRIX RAIN BACKGROUND
+═══════════════════════════════════════════════ */
+(function() {
   const canvas = document.getElementById('matrix-canvas');
-  const ctx = canvas.getContext('2d');
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const fontSize = 16;
-  const columns = canvas.width / fontSize;
-  const drops = Array(Math.floor(columns)).fill(1);
-
-  function drawMatrix() {
-    ctx.fillStyle = "rgba(1, 13, 9, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#00ff41";
-    ctx.font = fontSize + "px monospace";
-
-    for (let i = 0; i < drops.length; i++) {
-      const text = characters.charAt(Math.floor(Math.random() * characters.length));
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+  const ctx    = canvas.getContext('2d');
+  const chars  = 'アウエオカキクケコ0123456789ABCDEFGHIJ@#$%☠️⛓'.split('');
+  const fs = 13; let cols, drops;
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols  = Math.floor(canvas.width / fs);
+    drops = Array(cols).fill(1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(() => {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#660000';
+    ctx.font = fs + 'px monospace';
+    drops.forEach((y, i) => {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(ch, i*fs, y*fs);
+      if (y*fs > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
-    }
+    });
+  }, 60);
+})();
+
+/* ═══════════════════════════════════════════════
+   2. DRIP LINES
+═══════════════════════════════════════════════ */
+(function() {
+  const container = document.getElementById('bg-drips');
+  for (let i = 0; i < 14; i++) {
+    const d = document.createElement('div');
+    d.className = 'drip';
+    d.style.left              = (Math.random() * 100) + '%';
+    d.style.animationDuration = (4 + Math.random() * 7) + 's';
+    d.style.animationDelay    = (Math.random() * 6) + 's';
+    d.style.opacity           = (0.08 + Math.random() * 0.22);
+    d.style.width             = (1 + Math.random() * 2) + 'px';
+    container.appendChild(d);
+  }
+})();
+
+/* ═══════════════════════════════════════════════
+   3. TOAST
+═══════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.style.borderColor = isErr ? 'rgba(255,60,0,0.6)' : 'rgba(200,0,0,0.45)';
+  el.style.color       = isErr ? '#ff6600' : '#ff1a1a';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+window.toast = toast;
+
+/* ═══════════════════════════════════════════════
+   4. MODAL
+═══════════════════════════════════════════════ */
+let _confirmCb = null;
+function openModal(bodyHtml, cb) {
+  document.getElementById('modal-body').innerHTML = bodyHtml;
+  _confirmCb = cb;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); cb && cb(); };
+}
+window.closeModal = () => document.getElementById('modal-overlay').classList.remove('open');
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+/* ═══════════════════════════════════════════════
+   5. AUTH
+═══════════════════════════════════════════════ */
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById('topbar').style.display = 'flex';
+    document.getElementById('user-email-display').textContent = user.email;
+    showPage('dashboard');
+    loadDashboardStats();
+  } else {
+    document.getElementById('topbar').style.display = 'none';
+    forcePage('login');
+  }
+});
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value.trim();
+  const btn   = document.getElementById('login-btn');
+  const status= document.getElementById('login-status');
+
+  if (!email || !pass) { setLoginStatus('[ERROR] FIELDS EMPTY', '#ff4400'); return; }
+  if (!email.includes('@')) { setLoginStatus('[ERROR] INVALID EMAIL', '#ff4400'); return; }
+
+  btn.disabled = true;
+  setLoginStatus('[PROCESSING] VERIFYING...', '#ffaa00');
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    setLoginStatus('[OK] ACCESS GRANTED', '#00ff41');
+  } catch(err) {
+    const msg = err.code === 'auth/invalid-credential' ? 'WRONG EMAIL OR PASSWORD'
+              : err.code === 'auth/too-many-requests'   ? 'TOO MANY ATTEMPTS'
+              : err.message.substring(0,40);
+    setLoginStatus('[DENIED] ' + msg, '#ff1a1a');
+    btn.disabled = false;
+  }
+};
+
+function setLoginStatus(text, color) {
+  const el = document.getElementById('login-status');
+  el.style.color = color; el.textContent = text;
+}
+
+window.doLogout = async function() {
+  await signOut(auth);
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const login = document.getElementById('page-login');
+    if (login.classList.contains('active')) window.doLogin();
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   6. SPA NAVIGATION
+═══════════════════════════════════════════════ */
+function forcePage(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+}
+
+window.showPage = function(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('page-' + id);
+  if (target) { target.classList.add('active'); }
+
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === id);
+  });
+
+  // Lazy load
+  if (id === 'victims')   loadLeads();
+  if (id === 'templates') loadTemplates();
+  if (id === 'dashboard') loadDashboardStats();
+};
+
+/* ═══════════════════════════════════════════════
+   7. DASHBOARD STATS
+═══════════════════════════════════════════════ */
+async function loadDashboardStats() {
+  try {
+    const [leadsSnap, tplSnap, linksSnap] = await Promise.all([
+      get(ref(db,'leads')), get(ref(db,'templates')), get(ref(db,'links'))
+    ]);
+    const leadsData = leadsSnap.exists() ? Object.values(leadsSnap.val()) : [];
+    document.getElementById('stat-leads').textContent     = leadsData.length;
+    document.getElementById('stat-templates').textContent = tplSnap.exists()   ? Object.keys(tplSnap.val()).length   : 0;
+    document.getElementById('stat-links').textContent     = linksSnap.exists() ? Object.keys(linksSnap.val()).length : 0;
+    document.getElementById('stat-new').textContent       = leadsData.filter(l => (l.status||'New') === 'New').length;
+  } catch(e) { console.warn('Stats error:', e); }
+}
+
+/* ═══════════════════════════════════════════════
+   8. VICTIMS / DATA LOG
+═══════════════════════════════════════════════ */
+let allLeads = [];
+
+window.loadLeads = async function() {
+  document.getElementById('victims-loading').style.display = 'block';
+  document.getElementById('victims-table').style.display   = 'none';
+  document.getElementById('victims-empty').style.display   = 'none';
+  try {
+    const snap = await get(ref(db, 'leads'));
+    allLeads = [];
+    if (snap.exists()) snap.forEach(c => allLeads.unshift({ id: c.key, ...c.val() }));
+    renderVictims();
+  } catch(e) {
+    document.getElementById('victims-loading').textContent = '❌ ERROR: ' + e.message;
+  }
+};
+
+window.renderVictims = function() {
+  const q = (document.getElementById('v-search')?.value || '').toLowerCase();
+  const src = document.getElementById('v-source')?.value || '';
+  const sts = document.getElementById('v-status')?.value || '';
+
+  const filtered = allLeads.filter(l => {
+    const ms = !q || ['full_name','email','user_id','phone'].some(k => (l[k]||'').toLowerCase().includes(q));
+    const mr = !src || l.source === src;
+    const mt = !sts || l.status === sts;
+    return ms && mr && mt;
+  });
+
+  document.getElementById('victims-count').textContent =
+    `// SHOWING ${filtered.length} OF ${allLeads.length} SOULS`;
+  document.getElementById('victims-loading').style.display = 'none';
+
+  if (!filtered.length) {
+    document.getElementById('victims-table').style.display = 'none';
+    document.getElementById('victims-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('victims-table').style.display = '';
+  document.getElementById('victims-empty').style.display = 'none';
+
+  const bc = { New:'badge-new', Contacted:'badge-contacted', Qualified:'badge-qualified', Closed:'badge-closed' };
+  document.getElementById('victims-tbody').innerHTML = filtered.map((l, i) => `
+    <tr>
+      <td style="color:rgba(120,0,0,0.5)">${i+1}</td>
+      <td><code style="color:rgba(200,60,60,0.8);font-size:11px">${eh(l.user_id||'—')}</code></td>
+      <td>${eh(l.full_name||'—')}</td>
+      <td style="color:rgba(180,80,80,0.6);font-size:11px">${eh(l.email||'—')}</td>
+      <td>${eh(l.source||'—')}</td>
+      <td><span class="status-badge ${bc[l.status]||'badge-new'}">${eh(l.status||'New')}</span></td>
+      <td style="color:rgba(150,50,50,0.55);font-size:10px">${fd(l.created_at)}</td>
+      <td><button class="del-btn" onclick="deleteLead('${l.id}','${ea(l.full_name||'')}')">
+        <i class="fa-solid fa-skull"></i></button></td>
+    </tr>
+  `).join('');
+};
+
+window.deleteLead = function(id, name) {
+  openModal(`Delete victim <strong>"${eh(name)}"</strong>? This cannot be undone.`, async () => {
+    await remove(ref(db, 'leads/' + id));
+    allLeads = allLeads.filter(l => l.id !== id);
+    renderVictims();
+    toast('🔥 SOUL RELEASED');
+  });
+};
+
+window.exportCSV = function() {
+  if (!allLeads.length) { toast('NO DATA TO EXPORT', true); return; }
+  const h = ['user_id','full_name','email','phone','source','status','notes','created_at'];
+  const rows = allLeads.map(l => h.map(k => `"${(l[k]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv  = [h.join(','), ...rows].join('\n');
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'victims_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('📥 CSV EXPORTED');
+};
+
+/* ═══════════════════════════════════════════════
+   9. CREATE / LEAD FORM
+═══════════════════════════════════════════════ */
+window.resetCreateForm = function() {
+  ['c-userid','c-code','c-name','c-email','c-phone','c-notes'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  const src = document.getElementById('c-source'); if(src) src.value = '';
+  const sts = document.getElementById('c-status'); if(sts) sts.value = 'New';
+  document.getElementById('create-status').innerHTML = 'STATUS: <span style="color:rgba(150,0,0,0.5);">WAITING</span>';
+};
+
+window.submitLead = async function() {
+  const data = {
+    user_id:     document.getElementById('c-userid').value.trim(),
+    access_code: document.getElementById('c-code').value.trim(),
+    full_name:   document.getElementById('c-name').value.trim(),
+    email:       document.getElementById('c-email').value.trim(),
+    phone:       document.getElementById('c-phone').value.trim(),
+    source:      document.getElementById('c-source').value,
+    status:      document.getElementById('c-status').value || 'New',
+    notes:       document.getElementById('c-notes').value.trim(),
+    created_at:  new Date().toISOString(),
+    submitted_by: auth.currentUser?.email || 'unknown'
+  };
+
+  if (!data.user_id || !data.access_code || !data.full_name || !data.source) {
+    document.getElementById('create-status').innerHTML =
+      'STATUS: <span style="color:#ff4400;">⚠ FILL REQUIRED FIELDS</span>';
+    return;
   }
 
-  setInterval(drawMatrix, 50);
+  const btn = document.getElementById('create-submit-btn');
+  btn.disabled = true;
+  document.getElementById('create-status').innerHTML =
+    'STATUS: <span style="color:#ffaa00;">⏳ CAPTURING...</span>';
 
-  // Radar Message Logic
-  const msgs = ["[SYS] SCANNING...", "[LOG] NO THREATS FOUND", "[WARN] UNKNOWN PACKET DETECTED", "[SYS] ENCRYPTING..."];
-  setInterval(() => {
-    document.getElementById('radar-msg').innerText = msgs[Math.floor(Math.random() * msgs.length)];
-  }, 3000);
+  try {
+    await push(ref(db, 'leads'), data);
+    document.getElementById('create-status').innerHTML =
+      'STATUS: <span style="color:#00ff41;">✅ SOUL CAPTURED!</span>';
+    toast('🩸 SOUL SAVED TO FIREBASE');
+    resetCreateForm();
+    setTimeout(() => showPage('victims'), 1600);
+  } catch(e) {
+    document.getElementById('create-status').innerHTML =
+      'STATUS: <span style="color:#ff4400;">❌ ' + e.message + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+/* ═══════════════════════════════════════════════
+   10. LINK GENERATOR
+═══════════════════════════════════════════════ */
+function toggleExpand(id) {
+  const panel = document.getElementById(id);
+  panel.classList.toggle('open');
+  const arrowId = id === 'expand-create' ? 'arrow-create' : 'arrow-saved';
+  const arrow = document.getElementById(arrowId);
+  if (arrow) {
+    arrow.style.transform = panel.classList.contains('open') ? 'rotate(180deg)' : '';
+  }
+}
+window.toggleExpand = toggleExpand;
+
+let allLinks = [];
+
+window.loadLinks = async function() {
+  const container = document.getElementById('saved-links-list');
+  try {
+    const snap = await get(ref(db, 'links'));
+    allLinks = [];
+    if (snap.exists()) snap.forEach(c => allLinks.unshift({ id: c.key, ...c.val() }));
+    document.getElementById('links-count').textContent = allLinks.length;
+
+    if (!allLinks.length) {
+      container.innerHTML = '<div class="loading-horror" style="animation:none;opacity:0.4;">// NO LINKS YET</div>';
+      return;
+    }
+    container.innerHTML = allLinks.map(l => `
+      <div class="saved-link-item">
+        <div style="flex:1;min-width:0;">
+          <div class="sli-name">${eh(l.name||'Untitled')}</div>
+          <div class="sli-meta">${eh(l.source||'Direct')}${l.campaign&&l.campaign!=='—'?' · '+eh(l.campaign):''}</div>
+          <div class="sli-meta" style="margin-top:2px;font-size:8px;">${fd(l.created_at)}</div>
+        </div>
+        <div class="sli-btns">
+          <button class="sli-btn sli-copy" onclick="copyLinkItem('${ea(l.tracked_url||l.original_url||'')}',this)">
+            <i class="fa-solid fa-copy"></i> COPY
+          </button>
+          <button class="sli-btn sli-del" onclick="deleteLinkItem('${l.id}')">
+            <i class="fa-solid fa-fire"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    container.innerHTML = '<div class="loading-horror" style="color:#ff4400;">❌ ERROR: ' + e.message + '</div>';
+  }
+};
+
+window.generateLink = async function() {
+  const name     = document.getElementById('l-name').value.trim();
+  const url      = document.getElementById('l-url').value.trim();
+  const source   = document.getElementById('l-source').value;
+  const campaign = document.getElementById('l-campaign').value.trim();
+
+  if (!url) { toast('⚠ ENTER A URL', true); return; }
+  if (!url.startsWith('http')) { toast('⚠ URL MUST START WITH https://', true); return; }
+
+  const btn = document.getElementById('l-gen-btn');
+  btn.disabled = true;
+
+  let tracked = url;
+  try {
+    const u = new URL(url);
+    if (source)   u.searchParams.set('utm_source',   source.toLowerCase().replace(/\s+/g,'_'));
+    if (campaign) u.searchParams.set('utm_campaign', campaign.toLowerCase().replace(/\s+/g,'_'));
+    u.searchParams.set('utm_medium', 'cyberguard');
+    tracked = u.toString();
+  } catch(_) {}
+
+  try {
+    await push(ref(db, 'links'), {
+      name:         name || 'Unnamed Link',
+      original_url: url,
+      tracked_url:  tracked,
+      source:       source || 'Direct',
+      campaign:     campaign || '—',
+      created_at:   new Date().toISOString(),
+      clicks:       0
+    });
+    document.getElementById('link-result-url').textContent = tracked;
+    document.getElementById('link-result-box').classList.add('show');
+    toast('⛓ LINK FORGED & SAVED');
+    document.getElementById('l-name').value = '';
+    document.getElementById('l-url').value  = '';
+    document.getElementById('l-source').value  = '';
+    document.getElementById('l-campaign').value = '';
+    loadLinks();
+  } catch(e) {
+    toast('❌ ERROR: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+window.copyGeneratedLink = function() {
+  const val = document.getElementById('link-result-url').textContent;
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.getElementById('link-copy-btn');
+    btn.textContent = '✔ COPIED!'; btn.classList.add('copied');
+    toast('⛓ LINK COPIED'); 
+    setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> COPY LINK'; btn.classList.remove('copied'); }, 2000);
+  });
+};
+
+window.copyLinkItem = function(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✔'; btn.classList.add('copied');
+    toast('⛓ LINK COPIED');
+    setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+};
+
+window.deleteLinkItem = function(id) {
+  openModal('Destroy this cursed link? It cannot be restored.', async () => {
+    await remove(ref(db, 'links/' + id));
+    loadLinks();
+    toast('🔥 LINK DESTROYED');
+  });
+};
+
+/* ═══════════════════════════════════════════════
+   11. TEMPLATES
+═══════════════════════════════════════════════ */
+let allTemplates = [];
+let tplFilter    = 'all';
+
+window.toggleTemplateForm = function() {
+  document.getElementById('tpl-gen-form').classList.toggle('show');
+};
+
+window.setTplFilter = function(f, btn) {
+  tplFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTemplates();
+};
+
+window.loadTemplates = async function() {
+  document.getElementById('tpl-loading').style.display = 'block';
+  document.getElementById('templates-grid').style.display = 'none';
+  document.getElementById('tpl-empty').style.display = 'none';
+  try {
+    const snap = await get(ref(db, 'templates'));
+    allTemplates = [];
+    if (snap.exists()) snap.forEach(c => allTemplates.unshift({ id: c.key, ...c.val() }));
+    renderTemplates();
+  } catch(e) {
+    document.getElementById('tpl-loading').textContent = '❌ ERROR: ' + e.message;
+  }
+};
+
+window.renderTemplates = function() {
+  const q = (document.getElementById('tpl-search')?.value || '').toLowerCase();
+  const filtered = allTemplates.filter(t => {
+    const mn = !q || (t.name||'').toLowerCase().includes(q) || (t.desc||'').toLowerCase().includes(q);
+    const ms = tplFilter === 'all' || (t.status||'active') === tplFilter;
+    return mn && ms;
+  });
+
+  document.getElementById('tpl-loading').style.display = 'none';
+
+  if (!filtered.length) {
+    document.getElementById('templates-grid').style.display = 'none';
+    document.getElementById('tpl-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('tpl-empty').style.display = 'none';
+  document.getElementById('templates-grid').style.display = 'grid';
+
+  document.getElementById('templates-grid').innerHTML = filtered.map(t => {
+    const isActive = (t.status||'active') === 'active';
+    return `
+    <div class="tpl-card">
+      <div class="tpl-thumb">
+        <div class="tpl-thumb-overlay"></div>
+        <div class="tpl-badge">${eh(t.badge||'FORM')}</div>
+        <div class="tpl-status-dot">
+          <div class="dot ${isActive?'active-dot':''}"></div>
+          ${isActive?'ACTIVE':'DRAFT'}
+        </div>
+      </div>
+      <div class="tpl-body">
+        <div class="tpl-name">${eh(t.name||'Untitled')}</div>
+        <div class="tpl-desc">${eh(t.desc||'—')}</div>
+        <div class="tpl-meta">${fd(t.created_at)} · ${t.fields||0} fields</div>
+        <div class="tpl-stats">
+          <div class="tpl-stat-pill">VIEWS: <span>${t.views||0}</span></div>
+          <div class="tpl-stat-pill">SUBS: <span>${t.submissions||0}</span></div>
+        </div>
+      </div>
+      <div class="tpl-actions">
+        <button class="tpl-btn tpl-copy" onclick="copyTplLink('${t.id}')"><i class="fa-solid fa-copy"></i> COPY LINK</button>
+        <button class="tpl-btn tpl-edit" onclick="editTpl('${t.id}')"><i class="fa-solid fa-pen"></i> EDIT</button>
+        <button class="tpl-btn tpl-del"  onclick="deleteTpl('${t.id}','${ea(t.name||'')}')"><i class="fa-solid fa-skull"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.saveTemplate = async function() {
+  const name = document.getElementById('tg-name').value.trim();
+  if (!name) { toast('⚠ TITLE IS REQUIRED', true); return; }
+  try {
+    await push(ref(db, 'templates'), {
+      name, desc:    document.getElementById('tg-desc').value.trim(),
+      btn_text:      document.getElementById('tg-btn').value.trim() || 'Submit',
+      badge:         document.getElementById('tg-badge').value.trim() || 'FORM',
+      status:        document.getElementById('tg-status').value || 'active',
+      fields: 0, views: 0, submissions: 0,
+      created_at: new Date().toISOString()
+    });
+    toast('📜 SCROLL INSCRIBED TO FIREBASE');
+    document.getElementById('tpl-gen-form').classList.remove('show');
+    ['tg-name','tg-desc','tg-btn','tg-badge'].forEach(id => { const el = document.getElementById(id); if(el) el.value = id==='tg-btn'?'Submit':id==='tg-badge'?'FORM':''; });
+    loadTemplates();
+  } catch(e) {
+    toast('❌ ERROR: ' + e.message, true);
+  }
+};
+
+window.copyTplLink = function(id) {
+  const link = window.location.origin + '/form/' + id;
+  navigator.clipboard.writeText(link).then(() => toast('⛓ LINK COPIED'));
+};
+
+window.editTpl = function(id) {
+  toast('🔀 OPEN TEMPLATE GENERATOR TO EDIT', false);
+};
+
+window.deleteTpl = function(id, name) {
+  openModal(`Destroy scroll <strong>"${eh(name)}"</strong>? All links will be invalidated.`, async () => {
+    await remove(ref(db, 'templates/' + id));
+    allTemplates = allTemplates.filter(t => t.id !== id);
+    renderTemplates();
+    toast('🔥 SCROLL BURNED');
+  });
+};
+
+/* ═══════════════════════════════════════════════
+   12. HORROR CARD FIRE EFFECT
+═══════════════════════════════════════════════ */
+window.fireCard = function(card) {
+  document.querySelectorAll('.horror-card').forEach(c => {
+    c.classList.remove('active-fire');
+    c.querySelectorAll('.ember').forEach(e => e.remove());
+  });
+  card.classList.add('active-fire');
+  for (let i = 0; i < 9; i++) {
+    const em = document.createElement('div');
+    em.className = 'ember';
+    em.style.left             = (10 + Math.random() * 80) + '%';
+    em.style.animationDelay   = (Math.random() * 0.4) + 's';
+    em.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
+    em.style.background       = Math.random() > 0.5 ? '#ff6600' : '#ffcc00';
+    em.style.width = em.style.height = (3 + Math.random() * 5) + 'px';
+    card.appendChild(em);
+  }
+  setTimeout(() => {
+    card.classList.remove('active-fire');
+    card.querySelectorAll('.ember').forEach(e => e.remove());
+  }, 2500);
+};
+
+/* ═══════════════════════════════════════════════
+   13. HELPERS
+═══════════════════════════════════════════════ */
+function eh(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function ea(s) { return String(s).replace(/'/g,"\\'"); }
+function fd(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch { return '—'; }
+}
+
 </script>
-
 </body>
 </html>
